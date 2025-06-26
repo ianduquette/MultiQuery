@@ -1,0 +1,30 @@
+{
+    "_comment": "TEMPLATE FILE - Replace with actual database credentials. This file contains example/random credentials for demonstration purposes only.",
+    "_instructions": "Copy this file to create your actual environments configuration. Update hostnames, usernames, and passwords with real values.",
+    "environments": [
+        {
+            "clientId": "example-client-1",
+            "hostname": "db-server-1.example.com",
+            "port": 5432,
+            "database": "gis_example_client_1",
+            "username": "gis_user_abc123",
+            "password": "random_password_xyz789"
+        },
+        {
+            "clientId": "example-client-2",
+            "hostname": "db-server-2.example.com",
+            "port": 5432,
+            "database": "gis_example_client_2",
+            "username": "gis_user_def456",
+            "password": "random_password_uvw012"
+        },
+        {
+            "clientId": "demo-environment",
+            "hostname": "localhost",
+            "port": 5432,
+            "database": "demo_database",
+            "username": "demo_user_ghi789",
+            "password": "demo_password_rst345"
+        }
+    ]
+}
