@@ -116,10 +116,18 @@ class Program {
                 Environment.Exit(1);
             }
 
-            // TODO: Phase 5 - Execute queries
-            // TODO: Phase 6 - Format and display results
+            // Phase 5: Execute queries
+            var queryExecutionService = new QueryExecutionService();
+            var queryResults = await queryExecutionService.ExecuteQueryAsync(
+                queryContent,
+                connectionResults.Where(r => r.Success).Select(r => environmentConfig.Environments.First(e => e.ClientId == r.ClientId)).ToList(),
+                options.QueryFile);
 
-            Console.WriteLine("Phase 1, 2, 3 & 4 Complete: Arguments parsed, environments loaded, connections tested, and query validated!");
+            // Phase 6: Format and display results
+            var resultsFormatter = new ResultsFormatterService();
+            resultsFormatter.DisplayResults(queryResults, options.CsvOutput, options.Verbose);
+
+            Console.WriteLine("Query execution complete!");
         } catch (Exception ex) {
             Console.Error.WriteLine($"Error: {ex.Message}");
             if (options.Verbose) {
