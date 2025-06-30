@@ -122,14 +122,71 @@ FROM table_stats
 WHERE row_count > 1000000;
 ```
 
-## Building
+## Building and Publishing
+
+### Development Build
 
 ```bash
-# Build the project
+# Build the project for development
 dotnet build
 
 # Run from build output
 .\MultiQuery\bin\Debug\net8.0\multiquery.exe query.sql
+```
+
+### Production Publishing
+
+MultiQuery includes automated publishing scripts that create self-contained executables for both Windows and Linux platforms. These executables include the .NET runtime and require no additional dependencies on target machines.
+
+#### Quick Publishing (Recommended)
+
+```bash
+# Build for both Windows and Linux platforms
+.\publish-all.bat
+```
+
+This creates optimized, self-contained executables:
+- **Windows**: `publish/windows-x64/multiquery.exe` (~31 MB)
+- **Linux**: `publish/linux-x64/multiquery` (~35 MB)
+
+#### Manual Publishing
+
+```bash
+# Windows x64 self-contained
+dotnet publish MultiQuery/MultiQuery.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:PublishTrimmed=true -o publish/windows-x64
+
+# Linux x64 self-contained (cross-compiled from Windows)
+dotnet publish MultiQuery/MultiQuery.csproj -c Release -r linux-x64 --self-contained true -p:PublishSingleFile=true -p:PublishTrimmed=true -o publish/linux-x64
+```
+
+#### Publishing Features
+
+- ✅ **Self-Contained**: No .NET runtime required on target machines
+- ✅ **Single File**: Everything packaged into one executable
+- ✅ **Cross-Platform**: Build Linux binaries from Windows
+- ✅ **Optimized**: Code trimming and ReadyToRun for performance
+- ✅ **Small Size**: ~30-35 MB per platform
+
+#### Distribution
+
+**Windows Distribution:**
+```bash
+# Copy to target Windows machine
+copy publish\windows-x64\multiquery.exe \\target-machine\tools\
+```
+
+**Linux Distribution:**
+```bash
+# Copy to target Linux machine and make executable
+scp publish/linux-x64/multiquery user@linux-server:/usr/local/bin/
+ssh user@linux-server "chmod +x /usr/local/bin/multiquery"
+```
+
+#### Cleanup
+
+```bash
+# Remove all published files
+.\clean-publish.bat
 ```
 
 ## Security Features
