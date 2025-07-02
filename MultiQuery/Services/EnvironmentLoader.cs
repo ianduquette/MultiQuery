@@ -5,13 +5,9 @@ namespace MultiQuery.Services;
 
 /// <summary>
 /// Service for loading and validating database environment configurations from JSON files.
+/// Uses source generators for AOT-compatible, trimming-safe JSON serialization.
 /// </summary>
 public class EnvironmentLoader {
-    private static readonly JsonSerializerOptions JsonOptions = new() {
-        PropertyNameCaseInsensitive = true,
-        AllowTrailingCommas = true,
-        ReadCommentHandling = JsonCommentHandling.Skip
-    };
 
     /// <summary>
     /// Loads database environments from a JSON file.
@@ -33,7 +29,7 @@ public class EnvironmentLoader {
                 throw new InvalidOperationException("Environment file is empty");
             }
 
-            var config = JsonSerializer.Deserialize<EnvironmentConfig>(jsonContent, JsonOptions);
+            var config = JsonSerializer.Deserialize(jsonContent, MultiQueryJsonContext.Default.EnvironmentConfig);
 
             if (config == null) {
                 throw new InvalidOperationException("Failed to deserialize environment configuration");
