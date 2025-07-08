@@ -5,20 +5,34 @@ This guide will help you add MultiQuery to your system PATH so you can run `mult
 
 ## New Path Resolution Features
 
-### Relative Path Support
-MultiQuery now automatically resolves file paths relative to your current working directory:
+### Enhanced Path Resolution
+MultiQuery now provides intelligent path resolution with fallback support:
 
 - **Query files**: `multiquery myquery.sql` will look for `myquery.sql` in your current directory
-- **Environment files**: The default `environments.json` and custom environment files (via `-e` flag) are resolved relative to your current directory
+- **Environment files**: Smart fallback behavior for maximum convenience:
+  1. First checks your current working directory (for project-specific configs)
+  2. If not found, checks the application install directory (for global defaults)
 - **Absolute paths**: Still work exactly as before for full compatibility
 
 ### Path Resolution Examples
 ```bash
-# These commands work from any directory containing the files:
+# These commands work from any directory:
 multiquery query.sql                    # Uses query.sql from current directory
-multiquery query.sql -e config.json    # Uses both files from current directory
-multiquery /full/path/to/query.sql     # Absolute paths still work
+                                        # Uses environments.json from current dir OR install dir
+
+multiquery query.sql -e config.json    # Uses query.sql from current directory
+                                        # Uses config.json from current dir OR install dir
+
+multiquery /full/path/to/query.sql     # Absolute paths still work (no fallback)
 ```
+
+### Global Configuration Setup
+After installation, you can place a default `environments.json` in your MultiQuery install directory:
+
+**Windows**: `C:\Users\[YourUsername]\bin\environments.json` (or wherever you installed)
+**Linux**: `~/bin/environments.json` or `/usr/local/bin/environments.json`
+
+This global configuration will be used automatically when no project-specific `environments.json` exists in your current directory.
 
 ## Windows Installation
 
@@ -119,20 +133,39 @@ This will show:
 - Resolved absolute paths
 - File existence confirmation
 
-### Example Workflow
+### Example Workflows
+
+#### Project-Specific Configuration
 ```bash
 # Navigate to your project directory
 cd /path/to/my/sql/project
 
-# Create your SQL query file
+# Create your SQL query file and project-specific environments
 echo "SELECT * FROM users LIMIT 10;" > user_query.sql
+echo '{"environments": [...]}' > environments.json
 
-# Run MultiQuery (it will find files in current directory)
+# Run MultiQuery (uses project-specific config)
 multiquery user_query.sql
 
-# The application will automatically find:
+# The application will find:
 # - user_query.sql in the current directory
-# - environments.json in the current directory (default)
+# - environments.json in the current directory (project-specific)
+```
+
+#### Global Configuration Usage
+```bash
+# Set up global configuration once (after installation)
+cp environments.json ~/bin/  # Linux
+# or
+copy environments.json C:\Users\[YourUsername]\bin\  # Windows
+
+# Now you can run from any directory without local environments.json
+cd /any/directory/with/sql/files
+multiquery my_query.sql
+
+# The application will find:
+# - my_query.sql in the current directory
+# - environments.json from the install directory (global default)
 ```
 
 ## Troubleshooting
@@ -148,14 +181,19 @@ multiquery user_query.sql
 - **Permission denied**: For system-wide installation, use `sudo`
 
 ### General Path Resolution Issues
-- **File not found errors**: 
-  - Check that files exist in your current working directory
+- **Query file not found**:
+  - Check that the SQL file exists in your current working directory
   - Use `--verbose` flag to see path resolution details
-  - Remember that MultiQuery now looks for files relative to your current directory, not the MultiQuery installation directory
 
-- **Wrong file loaded**: 
-  - Use `--verbose` to see which files are being resolved
-  - Provide absolute paths if you need to reference files outside the current directory
+- **Environment file not found**:
+  - Check current directory first, then install directory
+  - Use `--verbose` to see both search locations and which was used
+  - Consider placing a global `environments.json` in your install directory
+
+- **Wrong environment file loaded**:
+  - Use `--verbose` to see which file was resolved (current dir vs install dir)
+  - Project-specific configs in current directory take precedence over global configs
+  - Provide absolute paths to override the search behavior
 
 ### Multiple Versions
 If you have multiple installations, use these commands to check which version is being used:
@@ -169,13 +207,15 @@ To update MultiQuery:
 2. Replace the existing executable in your chosen installation directory
 3. No PATH changes are needed
 
-## Benefits of the New Path Resolution
+## Benefits of the Enhanced Path Resolution
 
 1. **Simplified Usage**: Run `multiquery query.sql` from any project directory
-2. **Project-based Workflows**: Keep SQL files and environment configs together in project folders
-3. **Backward Compatibility**: Absolute paths continue to work as before
-4. **Better Error Messages**: Clear feedback when files aren't found, with helpful tips
-5. **Debugging Support**: Verbose mode shows exactly how paths are resolved
+2. **Global Defaults**: Set up `environments.json` once in install directory for system-wide use
+3. **Project Overrides**: Project-specific `environments.json` automatically takes precedence
+4. **Flexible Workflows**: Support both global and project-based configurations seamlessly
+5. **Backward Compatibility**: Absolute paths continue to work as before
+6. **Better Error Messages**: Clear feedback when files aren't found, with helpful tips
+7. **Debugging Support**: Verbose mode shows exactly how paths are resolved and which locations were searched
 
 ## Migration from Previous Versions
 

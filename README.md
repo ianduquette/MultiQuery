@@ -50,8 +50,9 @@ multiquery query.sql --csv --verbose
 ### Path Resolution Features
 
 - **Relative Path Support**: Files are automatically resolved relative to your current working directory
+- **Environments File Fallback**: If `environments.json` isn't found in current directory, automatically checks the application install directory
 - **Backward Compatibility**: Absolute paths continue to work exactly as before
-- **Verbose Debugging**: Use `--verbose` to see detailed path resolution information
+- **Verbose Debugging**: Use `--verbose` to see detailed path resolution information including fallback search locations
 - **Better Error Messages**: Clear feedback when files aren't found with helpful tips
 
 ### Example Workflow
@@ -88,7 +89,12 @@ Options:
 
 ### Environment Configuration File
 
-The application uses a JSON configuration file to define database connections. By default, it looks for `environments.json` in the current directory.
+The application uses a JSON configuration file to define database connections. By default, it looks for `environments.json` using this search order:
+
+1. **Current working directory** (for project-specific configurations)
+2. **Application install directory** (for global default configuration)
+
+This allows you to have a global default `environments.json` in your MultiQuery install directory, while still supporting project-specific configurations that override the global defaults.
 
 #### Template Structure
 
@@ -117,9 +123,18 @@ The application uses a JSON configuration file to define database connections. B
 
 ### Supported Environment File Patterns
 
-- `environments.json` (default)
-- Custom files via `-e` or `--environments-file` option
+- `environments.json` (default, with fallback to install directory)
+- Custom files via `-e` or `--environments-file` option (also support fallback behavior)
 - Files matching `*-environments.json` pattern (e.g., `prod-environments.json`, `test-environments.json`)
+
+### Environment File Search Behavior
+
+**For relative paths** (including default `environments.json`):
+1. First checks your current working directory
+2. If not found, checks the application install directory
+3. Uses the first file found, or shows error if neither exists
+
+**For absolute paths**: Uses the exact path specified (no fallback)
 
 ## Query Files
 
@@ -453,15 +468,16 @@ multiquery query.sql --verbose
 - Use `--verbose` for detailed validation information
 
 ### File Not Found Errors
-- **New Path Resolution**: Files are now resolved relative to your current working directory
+- **Query Files**: Resolved relative to your current working directory only
+- **Environment Files**: Support fallback behavior - checked in current directory first, then application install directory
 - Use `--verbose` to see detailed path resolution information including:
   - Original paths provided
   - Whether paths are relative or absolute
   - Current working directory
+  - Search locations tried (for environment files)
   - Resolved absolute paths
   - File existence confirmation
-- Ensure files exist in your current directory or provide absolute paths
-- The default `environments.json` is looked for in your current directory
+- **Tip**: Place `environments.json` in your application install directory for a global default configuration
 
 ### Performance Issues
 - Large result sets are handled efficiently with optimized formatting

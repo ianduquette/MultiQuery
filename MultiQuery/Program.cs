@@ -60,7 +60,7 @@ class Program {
 
             try {
                 resolvedQueryFile = pathResolver.ResolveAndValidatePath(options.QueryFile, "query file");
-                resolvedEnvironmentsFile = pathResolver.ResolveAndValidatePath(options.EnvironmentsFile, "environments file");
+                resolvedEnvironmentsFile = pathResolver.ResolveEnvironmentsFile(options.EnvironmentsFile);
             } catch (FileNotFoundException ex) {
                 Console.Error.WriteLine($"Error: {ex.Message}");
                 Environment.Exit(1);
@@ -77,7 +77,7 @@ class Program {
 
             // Display path resolution information if verbose
             pathResolver.DisplayPathResolution(options.QueryFile, resolvedQueryFile, "Query File", options.Verbose);
-            pathResolver.DisplayPathResolution(options.EnvironmentsFile, resolvedEnvironmentsFile, "Environments File", options.Verbose);
+            pathResolver.DisplayPathResolution(options.EnvironmentsFile, resolvedEnvironmentsFile, "Environments File", options.Verbose, isEnvironmentsFile: true);
 
             Console.WriteLine("✓ All required files exist and paths resolved");
             Console.WriteLine();
