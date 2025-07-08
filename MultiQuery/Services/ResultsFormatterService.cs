@@ -7,6 +7,8 @@ namespace MultiQuery.Services;
 /// Service for formatting and displaying query results.
 /// </summary>
 public class ResultsFormatterService {
+    private bool csvHeadersWritten = false;
+
     /// <summary>
     /// Displays query results to console.
     /// </summary>
@@ -19,6 +21,68 @@ public class ResultsFormatterService {
         } else {
             DisplayTableFormat(results, verbose);
         }
+    }
+
+    /// <summary>
+    /// Displays a single query result immediately (for streaming).
+    /// </summary>
+    /// <param name="result">The query result to display.</param>
+    /// <param name="csvOutput">Whether to output in CSV format.</param>
+    /// <param name="isFirstResult">Whether this is the first result (for CSV headers).</param>
+    public void DisplaySingleResult(QueryResult result, bool csvOutput, bool isFirstResult) {
+        if (csvOutput) {
+            DisplaySingleResultCsv(result, isFirstResult);
+        } else {
+            DisplaySingleResultTable(result);
+        }
+    }
+
+    /// <summary>
+    /// Displays a single result in table format.
+    /// </summary>
+    private void DisplaySingleResultTable(QueryResult result) {
+        var sb = new StringBuilder();
+
+        if (result.Success) {
+            var rowText = result.Rows.Count == 1 ? "row" : "rows";
+            sb.AppendLine($"[{result.ClientId}] ✓ {result.Rows.Count} {rowText} ({result.ExecutionTime.TotalMilliseconds:F0}ms)");
+
+            if (result.Rows.Count > 0) {
+                DisplayTable(sb, result.ColumnNames, result.Rows);
+            }
+        } else {
+            sb.AppendLine($"[{result.ClientId}] ✗ {result.ErrorMessage}");
+        }
+
+        sb.AppendLine();
+        Console.Write(sb.ToString());
+    }
+
+    /// <summary>
+    /// Displays a single result in CSV format.
+    /// </summary>
+    private void DisplaySingleResultCsv(QueryResult result, bool isFirstResult) {
+        var sb = new StringBuilder();
+
+        // Write headers only once for first successful result
+        if (!csvHeadersWritten && result.Success && result.Rows.Count > 0) {
+            sb.AppendLine("client_id," + string.Join(",", result.ColumnNames));
+            csvHeadersWritten = true;
+        }
+
+        // Write data rows
+        if (result.Success) {
+            foreach (var row in result.Rows) {
+                var values = new List<string> { result.ClientId };
+                foreach (var column in result.ColumnNames) {
+                    var value = row.ContainsKey(column) ? row[column] : null;
+                    values.Add(FormatCsvValue(value));
+                }
+                sb.AppendLine(string.Join(",", values));
+            }
+        }
+
+        Console.Write(sb.ToString());
     }
 
     /// <summary>

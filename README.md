@@ -1,17 +1,18 @@
 # MultiQuery
 
-Execute SQL queries against multiple PostgreSQL databases simultaneously with bulletproof security.
+Execute SQL queries against multiple PostgreSQL databases with real-time streaming results and bulletproof security.
 
 ## Overview
 
-MultiQuery is a command-line tool designed for DevOps and database administrators that allows you to run SQL queries against multiple PostgreSQL databases and view the results in a unified format. It features dual-layer security with query validation and read-only transactions, supports CSV output, and provides detailed connection diagnostics.
+MultiQuery is a command-line tool designed for DevOps and database administrators that allows you to run SQL queries against multiple PostgreSQL databases with real-time streaming results. It features dual-layer security with query validation and read-only transactions, supports CSV output, and provides detailed connection diagnostics with immediate feedback as each database completes.
 
 ## Key Features
 
+- **Real-Time Streaming Results**: See results immediately as each database completes - no waiting for slow databases
 - **Dual-Layer Security**: Query validation + read-only transactions prevent any data modifications
-- **Multi-Database Execution**: Run queries across multiple PostgreSQL environments simultaneously
-- **Flexible Output**: Table format (default) or CSV export for data analysis
-- **DevOps Friendly**: Perfect for monitoring, reporting, and script generation
+- **Multi-Database Execution**: Run queries across multiple PostgreSQL environments with immediate feedback
+- **Flexible Output**: Table format (default) or CSV export for data analysis with streaming support
+- **DevOps Friendly**: Perfect for monitoring, reporting, and script generation with responsive feedback
 - **Comprehensive Diagnostics**: Detailed connection testing and verbose error reporting
 - **Fast & Efficient**: Optimized output formatting with StringBuilder for large result sets
 
@@ -258,11 +259,59 @@ MultiQuery/
 - System.CommandLine (command-line parsing)
 - Npgsql (PostgreSQL connectivity)
 
+## Streaming Results
+
+MultiQuery features **real-time streaming results** that provide immediate feedback as each database completes its query execution. This eliminates waiting for slow databases and provides a much more responsive user experience.
+
+### How Streaming Works
+
+- **Sequential Execution**: Queries are executed one database at a time to ensure perfect result grouping
+- **Immediate Display**: Results appear instantly when each database completes
+- **Progress Indication**: Shows execution progress with "Executing against X database(s)..." message
+- **Perfect Grouping**: Each database's results stay perfectly organized and grouped together
+
+### Streaming Benefits
+
+✅ **Immediate Feedback** - See results as soon as each database completes
+✅ **No Waiting** - Fast databases don't wait for slow ones
+✅ **Better UX** - Responsive feedback perfect for monitoring and DevOps
+✅ **Same Functionality** - All existing features work identically
+✅ **Perfect Grouping** - Results maintain exact same organization
+
+### Example Streaming Output
+
+```
+=== Query Results: monitoring-query.sql ===
+Executing against 3 database(s)...
+
+[fast-db] ✓ 5 rows (12ms)        ← Appears immediately
+service_name | status  | last_check
+-------------|---------|--------------------
+web-api      | running | 2024-01-15 14:30:00
+database     | running | 2024-01-15 14:29:55
+
+[medium-db] ✓ 3 rows (156ms)     ← Appears when complete
+service_name | status  | last_check
+-------------|---------|--------------------
+web-api      | running | 2024-01-15 14:30:00
+cache        | running | 2024-01-15 14:29:50
+
+[slow-db] ✓ 8 rows (2340ms)      ← Appears last
+service_name | status  | last_check
+-------------|---------|--------------------
+web-api      | running | 2024-01-15 14:30:00
+database     | running | 2024-01-15 14:29:55
+cache        | stopped | 2024-01-15 14:25:10
+
+Query execution complete!
+```
+
 ## Output Formats
 
 ### Table Format (Default)
 ```
 === Query Results: monitoring-query.sql ===
+Executing against 2 database(s)...
 
 [prod-db] ✓ 3 rows (45ms)
 service_name | status  | last_check
@@ -277,13 +326,18 @@ service_name | status  | last_check
 web-api      | running | 2024-01-15 14:30:00
 database     | running | 2024-01-15 14:29:55
 cache        | running | 2024-01-15 14:29:50
+
+Query execution complete!
 ```
 
-### CSV Format
+### CSV Format (with Streaming)
 ```bash
-# Export to CSV for analysis
+# Export to CSV for analysis with streaming results
 multiquery report-query.sql --csv > results.csv
 ```
+
+CSV output streams data as each database completes, with headers written once at the beginning:
+
 ```csv
 client_id,service_name,status,last_check
 prod-db,web-api,running,2024-01-15 14:30:00
@@ -293,6 +347,8 @@ staging-db,web-api,running,2024-01-15 14:30:00
 staging-db,database,running,2024-01-15 14:29:55
 staging-db,cache,running,2024-01-15 14:29:50
 ```
+
+**Note**: In CSV mode, you'll see the progress header followed by streaming data rows as each database completes.
 
 ## Examples
 
@@ -364,5 +420,7 @@ multiquery query.sql --verbose
 
 ### Performance Issues
 - Large result sets are handled efficiently with optimized formatting
+- **Streaming results** provide immediate feedback - no waiting for slow databases
 - Use `--csv` format for better performance with very large datasets
 - Consider adding `LIMIT` clauses for exploratory queries
+- **Real-time feedback** makes MultiQuery perfect for monitoring and DevOps scenarios

@@ -116,16 +116,27 @@ class Program {
                 Environment.Exit(1);
             }
 
-            // Phase 5: Execute queries
+            // Phase 5: Execute queries with streaming
             var queryExecutionService = new QueryExecutionService();
-            var queryResults = await queryExecutionService.ExecuteQueryAsync(
-                queryContent,
-                connectionResults.Where(r => r.Success).Select(r => environmentConfig.Environments.First(e => e.ClientId == r.ClientId)).ToList(),
-                options.QueryFile);
-
-            // Phase 6: Format and display results
             var resultsFormatter = new ResultsFormatterService();
-            resultsFormatter.DisplayResults(queryResults, options.CsvOutput, options.Verbose);
+            var successfulEnvironments = connectionResults.Where(r => r.Success)
+                .Select(r => environmentConfig.Environments.First(e => e.ClientId == r.ClientId))
+                .ToList();
+            var isFirstResult = true;
+
+            // Display streaming header
+            Console.WriteLine($"=== Query Results: {Path.GetFileName(options.QueryFile)} ===");
+            Console.WriteLine($"Executing against {successfulEnvironments.Count} database(s)...");
+            Console.WriteLine();
+
+            await queryExecutionService.ExecuteQueryStreamingAsync(
+                queryContent,
+                successfulEnvironments,
+                options.QueryFile,
+                async result => {
+                    resultsFormatter.DisplaySingleResult(result, options.CsvOutput, isFirstResult);
+                    isFirstResult = false;
+                });
 
             Console.WriteLine("Query execution complete!");
         } catch (Exception ex) {

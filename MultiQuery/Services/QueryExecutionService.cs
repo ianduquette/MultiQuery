@@ -38,6 +38,25 @@ public class QueryExecutionService {
     }
 
     /// <summary>
+    /// Executes a query against multiple database environments with streaming results.
+    /// </summary>
+    /// <param name="queryContent">The SQL query to execute.</param>
+    /// <param name="environments">List of database environments to query.</param>
+    /// <param name="queryFile">Path to the query file (for reporting).</param>
+    /// <param name="onResultCompleted">Callback function called when each database completes.</param>
+    public async Task ExecuteQueryStreamingAsync(
+        string queryContent,
+        List<DatabaseEnvironment> environments,
+        string queryFile,
+        Func<QueryResult, Task> onResultCompleted) {
+
+        foreach (var environment in environments) {
+            var queryResult = await ExecuteQueryOnEnvironmentAsync(queryContent, environment);
+            await onResultCompleted(queryResult);
+        }
+    }
+
+    /// <summary>
     /// Executes a query against a single database environment.
     /// </summary>
     /// <param name="queryContent">The SQL query to execute.</param>
