@@ -9,6 +9,7 @@ MultiQuery is a command-line tool designed for DevOps and database administrator
 ## Key Features
 
 - **Real-Time Streaming Results**: See results immediately as each database completes - no waiting for slow databases
+- **Automatic Path Resolution**: Files resolved relative to current working directory with full backward compatibility
 - **Dual-Layer Security**: Query validation + read-only transactions prevent any data modifications
 - **Multi-Database Execution**: Run queries across multiple PostgreSQL environments with immediate feedback
 - **Flexible Output**: Table format (default) or CSV export for data analysis with streaming support
@@ -16,17 +17,54 @@ MultiQuery is a command-line tool designed for DevOps and database administrator
 - **Comprehensive Diagnostics**: Detailed connection testing and verbose error reporting
 - **Fast & Efficient**: Optimized output formatting with StringBuilder for large result sets
 
+## Installation
+
+For detailed installation instructions to add MultiQuery to your system PATH, see [INSTALLATION.md](INSTALLATION.md).
+
+### Quick Installation Summary
+1. Build the application using `publish-all.bat`
+2. Copy the executable to a directory in your PATH
+3. Run `multiquery --help` to verify installation
+
 ## Usage
 
+MultiQuery now supports **automatic path resolution** for both query files and environment files:
+
 ```bash
-# Basic usage with default environments.json
+# Basic usage - files resolved relative to current directory
 multiquery query.sql
 
-# With custom environments file
+# With custom environments file (also resolved relatively)
 multiquery query.sql -e custom-environments.json
+
+# Absolute paths still work for full compatibility
+multiquery /full/path/to/query.sql -e /full/path/to/environments.json
+
+# Mix relative and absolute paths
+multiquery query.sql -e /full/path/to/environments.json
 
 # With additional options
 multiquery query.sql --csv --verbose
+```
+
+### Path Resolution Features
+
+- **Relative Path Support**: Files are automatically resolved relative to your current working directory
+- **Backward Compatibility**: Absolute paths continue to work exactly as before
+- **Verbose Debugging**: Use `--verbose` to see detailed path resolution information
+- **Better Error Messages**: Clear feedback when files aren't found with helpful tips
+
+### Example Workflow
+```bash
+# Navigate to your project directory
+cd /path/to/my/sql/project
+
+# Your files are in the current directory
+ls
+# query.sql  environments.json
+
+# Run MultiQuery - it finds files automatically
+multiquery query.sql
 ```
 
 ### Command Line Options
@@ -147,8 +185,8 @@ MultiQuery includes automated publishing scripts that create self-contained exec
 ```
 
 This creates optimized, self-contained executables:
-- **Windows**: `publish/windows-x64/multiquery.exe` (~31 MB)
-- **Linux**: `publish/linux-x64/multiquery` (~35 MB)
+- **Windows**: `publish/windows-x64/multiquery.exe` (~16 MB)
+- **Linux**: `publish/linux-x64/multiquery` (~18 MB)
 
 #### Manual Publishing
 
@@ -166,7 +204,7 @@ dotnet publish MultiQuery/MultiQuery.csproj -c Release -r linux-x64 --self-conta
 - ✅ **Single File**: Everything packaged into one executable
 - ✅ **Cross-Platform**: Build Linux binaries from Windows
 - ✅ **Optimized**: Code trimming and ReadyToRun for performance
-- ✅ **Small Size**: ~30-35 MB per platform
+- ✅ **Small Size**: ~16-18 MB per platform
 
 #### Distribution
 
@@ -246,6 +284,7 @@ MultiQuery/
 ├── Services/               # Business logic services
 │   ├── DatabaseConnectionManager.cs
 │   ├── EnvironmentLoader.cs
+│   ├── PathResolver.cs     # Path resolution service (NEW)
 │   ├── QueryFileReader.cs
 │   ├── QueryValidator.cs
 │   ├── QueryExecutionService.cs    # Multi-database query execution
@@ -414,9 +453,15 @@ multiquery query.sql --verbose
 - Use `--verbose` for detailed validation information
 
 ### File Not Found Errors
-- Verify the query file path is correct
-- Ensure the environments file exists (default: `environments.json`)
-- Use absolute paths if relative paths are not working
+- **New Path Resolution**: Files are now resolved relative to your current working directory
+- Use `--verbose` to see detailed path resolution information including:
+  - Original paths provided
+  - Whether paths are relative or absolute
+  - Current working directory
+  - Resolved absolute paths
+  - File existence confirmation
+- Ensure files exist in your current directory or provide absolute paths
+- The default `environments.json` is looked for in your current directory
 
 ### Performance Issues
 - Large result sets are handled efficiently with optimized formatting

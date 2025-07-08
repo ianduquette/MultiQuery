@@ -121,6 +121,16 @@ echo • Linux:   Copy 'multiquery' to target Linux machine and run 'chmod +x mu
 echo.
 echo Both executables are self-contained and require no additional dependencies.
 echo.
+echo 📋 PATH Installation:
+echo For detailed instructions on adding MultiQuery to your system PATH,
+echo see INSTALLATION.md in the project root directory.
+echo.
+echo 🆕 New Features:
+echo • Automatic path resolution for SQL and environment files
+echo • Files are resolved relative to your current working directory
+echo • Absolute paths continue to work for full compatibility
+echo • Use --verbose to see detailed path resolution information
+echo.
 
 REM Optional: Open publish folder
 set /p "open_folder=Open publish folder? (y/n): "

@@ -51,7 +51,23 @@ class Program {
 
     private static async Task ExecuteMultiQuery(CommandLineOptions options) {
         try {
-            // Phase 1 Output: Display parsed arguments
+            // Initialize path resolver
+            var pathResolver = new PathResolver();
+
+            // Phase 1: Resolve and validate file paths
+            string resolvedQueryFile;
+            string resolvedEnvironmentsFile;
+
+            try {
+                resolvedQueryFile = pathResolver.ResolveAndValidatePath(options.QueryFile, "query file");
+                resolvedEnvironmentsFile = pathResolver.ResolveAndValidatePath(options.EnvironmentsFile, "environments file");
+            } catch (FileNotFoundException ex) {
+                Console.Error.WriteLine($"Error: {ex.Message}");
+                Environment.Exit(1);
+                return; // This line will never be reached, but satisfies the compiler
+            }
+
+            // Phase 1 Output: Display parsed arguments and resolved paths
             Console.WriteLine("=== MultiQuery - Parsed Arguments ===");
             Console.WriteLine($"Query File: {options.QueryFile}");
             Console.WriteLine($"Environments File: {options.EnvironmentsFile}");
@@ -59,19 +75,16 @@ class Program {
             Console.WriteLine($"Verbose Mode: {options.Verbose}");
             Console.WriteLine();
 
-            // Validate file existence
-            if (!File.Exists(options.QueryFile)) {
-                Console.Error.WriteLine($"Error: Query file '{options.QueryFile}' not found.");
-                Environment.Exit(1);
-            }
+            // Display path resolution information if verbose
+            pathResolver.DisplayPathResolution(options.QueryFile, resolvedQueryFile, "Query File", options.Verbose);
+            pathResolver.DisplayPathResolution(options.EnvironmentsFile, resolvedEnvironmentsFile, "Environments File", options.Verbose);
 
-            if (!File.Exists(options.EnvironmentsFile)) {
-                Console.Error.WriteLine($"Error: Environments file '{options.EnvironmentsFile}' not found.");
-                Environment.Exit(1);
-            }
-
-            Console.WriteLine("✓ All required files exist");
+            Console.WriteLine("✓ All required files exist and paths resolved");
             Console.WriteLine();
+
+            // Update options with resolved paths for downstream services
+            options.QueryFile = resolvedQueryFile;
+            options.EnvironmentsFile = resolvedEnvironmentsFile;
 
             // Phase 2: Load environments
             var environmentLoader = new EnvironmentLoader();
