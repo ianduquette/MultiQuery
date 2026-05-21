@@ -133,7 +133,13 @@ public class DatabaseConnectionManager {
             var status = result.Success ? "✓" : "✗";
             var duration = $"{result.Duration.TotalMilliseconds:F0}ms";
 
+            if (!result.Success) {
+                Console.ForegroundColor = ConsoleColor.Red;
+            }
             Console.WriteLine($"{status} {result.ClientId,-15} ({duration,6}) - {result.Message}");
+            if (!result.Success) {
+                Console.ResetColor();
+            }
 
             if (verbose && result.Success && !string.IsNullOrEmpty(result.PostgreSqlVersion)) {
                 // Extract just the version number for cleaner output

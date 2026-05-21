@@ -4,6 +4,7 @@
 
 # Security: Never commit credential files
 *-environments.json
+environments.json
 make-envs.sh
 *.env
 .env.*

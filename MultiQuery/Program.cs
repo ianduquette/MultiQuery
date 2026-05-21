@@ -6,6 +6,7 @@ namespace MultiQuery;
 
 class Program {
     static async Task<int> Main(string[] args) {
+        Console.OutputEncoding = System.Text.Encoding.UTF8;
         var rootCommand = CreateRootCommand();
         return await rootCommand.InvokeAsync(args);
     }
@@ -93,11 +94,31 @@ class Program {
             // Phase 2 Output: Display loaded environments
             environmentLoader.DisplayEnvironments(environmentConfig, options.Verbose);
 
-            // Phase 3: Test database connections
+            // Phase 3: Read and validate query file (before connecting — fail fast on bad queries)
+            var queryFileReader = new QueryFileReader();
+            var queryContent = await queryFileReader.ReadQueryFileAsync(options.QueryFile);
+
+            // Phase 3 Output: Display query content
+            queryFileReader.DisplayQueryContent(queryContent, options.QueryFile, options.Verbose);
+
+            var queryValidator = new QueryValidator();
+            var validationResult = queryValidator.ValidateQuery(queryContent);
+
+            // Phase 3 Output: Display validation results
+            queryValidator.DisplayValidationResult(validationResult, options.Verbose);
+
+            if (!validationResult.IsValid) {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.Error.WriteLine("Query validation failed. Only SELECT statements are allowed.");
+                Console.ResetColor();
+                Environment.Exit(1);
+            }
+
+            // Phase 4: Test database connections
             var connectionManager = new DatabaseConnectionManager();
             var connectionResults = await connectionManager.TestAllConnectionsAsync(environmentConfig.Environments);
 
-            // Phase 3 Output: Display connection test results
+            // Phase 4 Output: Display connection test results
             connectionManager.DisplayConnectionResults(connectionResults, options.Verbose);
 
             // Check if any connections failed
@@ -109,24 +130,6 @@ class Program {
                 }
                 Console.WriteLine("Proceeding with available connections...");
                 Console.WriteLine();
-            }
-
-            // Phase 4: Read and validate query file
-            var queryFileReader = new QueryFileReader();
-            var queryContent = await queryFileReader.ReadQueryFileAsync(options.QueryFile);
-
-            // Phase 4 Output: Display query content
-            queryFileReader.DisplayQueryContent(queryContent, options.QueryFile, options.Verbose);
-
-            var queryValidator = new QueryValidator();
-            var validationResult = queryValidator.ValidateQuery(queryContent);
-
-            // Phase 4 Output: Display validation results
-            queryValidator.DisplayValidationResult(validationResult, options.Verbose);
-
-            if (!validationResult.IsValid) {
-                Console.Error.WriteLine("Query validation failed. Only SELECT statements are allowed.");
-                Environment.Exit(1);
             }
 
             // Phase 5: Execute queries with streaming

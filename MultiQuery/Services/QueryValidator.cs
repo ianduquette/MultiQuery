@@ -163,7 +163,9 @@ public class QueryValidator {
         Console.WriteLine($"Statements Found: {result.StatementCount}");
 
         if (!result.IsValid) {
+            Console.ForegroundColor = ConsoleColor.Red;
             Console.WriteLine($"Error: {result.ErrorMessage}");
+            Console.ResetColor();
         }
 
         if (verbose && result.StatementResults.Count > 0) {
