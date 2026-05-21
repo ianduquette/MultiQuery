@@ -55,20 +55,27 @@ If your databases live in a k8s cluster with a specific secret/service layout, `
 
 ## 3. Run
 
+The first argument can be **either a `.sql` file or an inline SQL string**:
+
 ```bash
-multiquery query.sql                      # table output
+multiquery query.sql                      # run a .sql file
+multiquery "SELECT now();"                # run an inline query
 multiquery query.sql --csv > results.csv  # CSV output
 multiquery query.sql --verbose            # see connection + path resolution details
 multiquery query.sql -e other-envs.json   # use a different environments file
 ```
 
-`query.sql` and the environments file are resolved relative to your current directory. If the environments file isn't there, the app also checks the directory where `multiquery` is installed — useful for a shared default.
+Detection rule: if the argument matches an existing file, it's read as a file. Otherwise it's executed as SQL. **Exception:** if the argument ends in `.sql` but the file doesn't exist, the run fails fast (no silent fallback to "treat as SQL") to catch typos.
+
+Either way, the query is validated as read-only before it runs.
+
+Files (query and environments) are resolved relative to your current directory. If the environments file isn't there, the app also checks the directory where `multiquery` is installed — useful for a shared default.
 
 ## Options
 
 | Flag | Description |
 |------|-------------|
-| `<queryFile>` | Path to a `.sql` file (positional, required) |
+| `<query>` | Path to a `.sql` file **or** an inline SQL string (positional, required) |
 | `-e, --environments-file` | Path to environments JSON. Default: `environments.json` |
 | `-c, --csv` | Output CSV instead of a table |
 | `-v, --verbose` | Show connection diagnostics and path resolution |
