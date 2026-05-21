@@ -14,30 +14,6 @@ public class QueryExecutionService {
     }
 
     /// <summary>
-    /// Executes a query against multiple database environments.
-    /// </summary>
-    /// <param name="queryContent">The SQL query to execute.</param>
-    /// <param name="environments">List of database environments to query.</param>
-    /// <param name="queryFile">Path to the query file (for reporting).</param>
-    /// <returns>Results from all database environments.</returns>
-    public async Task<MultiQueryResult> ExecuteQueryAsync(
-        string queryContent,
-        List<DatabaseEnvironment> environments,
-        string queryFile) {
-        var result = new MultiQueryResult {
-            QueryFile = queryFile
-        };
-
-        // Execute query against each environment
-        foreach (var environment in environments) {
-            var queryResult = await ExecuteQueryOnEnvironmentAsync(queryContent, environment);
-            result.Results.Add(queryResult);
-        }
-
-        return result;
-    }
-
-    /// <summary>
     /// Executes a query against multiple database environments with streaming results.
     /// </summary>
     /// <param name="queryContent">The SQL query to execute.</param>
@@ -70,26 +46,26 @@ public class QueryExecutionService {
         var startTime = DateTime.UtcNow;
 
         try {
-            using var connection = _connectionManager.CreateConnection(environment);
+            await using var connection = _connectionManager.CreateConnection(environment);
             await connection.OpenAsync();
 
             // Start read-only transaction for security
-            using var transaction = await connection.BeginTransactionAsync();
-            using var setReadOnlyCommand = new NpgsqlCommand("SET TRANSACTION READ ONLY", connection, transaction);
+            await using var transaction = await connection.BeginTransactionAsync();
+            await using var setReadOnlyCommand = new NpgsqlCommand("SET TRANSACTION READ ONLY", connection, transaction);
             await setReadOnlyCommand.ExecuteNonQueryAsync();
 
-            using var command = new NpgsqlCommand(queryContent, connection, transaction);
-            using var reader = await command.ExecuteReaderAsync();
+            await using var command = new NpgsqlCommand(queryContent, connection, transaction);
+            await using var reader = await command.ExecuteReaderAsync();
 
             // Get column names
-            for (int i = 0; i < reader.FieldCount; i++) {
+            for (var i = 0; i < reader.FieldCount; i++) {
                 result.ColumnNames.Add(reader.GetName(i));
             }
 
             // Read all rows
             while (await reader.ReadAsync()) {
                 var row = new Dictionary<string, object?>();
-                for (int i = 0; i < reader.FieldCount; i++) {
+                for (var i = 0; i < reader.FieldCount; i++) {
                     var columnName = reader.GetName(i);
                     var value = reader.IsDBNull(i) ? null : reader.GetValue(i);
                     row[columnName] = value;

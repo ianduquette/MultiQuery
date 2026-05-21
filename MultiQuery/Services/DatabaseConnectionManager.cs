@@ -48,14 +48,14 @@ public class DatabaseConnectionManager {
         try {
             var connectionString = BuildConnectionString(environment);
 
-            using var connection = new NpgsqlConnection(connectionString);
+            await using var connection = new NpgsqlConnection(connectionString);
 
             // Test connection
             await connection.OpenAsync();
 
             // Test basic query execution
-            using var command = new NpgsqlCommand("SELECT 1 as test_value, version() as pg_version", connection);
-            using var reader = await command.ExecuteReaderAsync();
+            await using var command = new NpgsqlCommand("SELECT 1 as test_value, version() as pg_version", connection);
+            await using var reader = await command.ExecuteReaderAsync();
 
             if (await reader.ReadAsync()) {
                 result.PostgreSqlVersion = reader.GetString(1); // pg_version is the second column

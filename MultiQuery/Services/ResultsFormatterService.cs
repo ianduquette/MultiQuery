@@ -7,21 +7,7 @@ namespace MultiQuery.Services;
 /// Service for formatting and displaying query results.
 /// </summary>
 public class ResultsFormatterService {
-    private bool csvHeadersWritten = false;
-
-    /// <summary>
-    /// Displays query results to console.
-    /// </summary>
-    /// <param name="results">The query results to display.</param>
-    /// <param name="csvOutput">Whether to output in CSV format.</param>
-    /// <param name="verbose">Whether to show verbose output.</param>
-    public void DisplayResults(MultiQueryResult results, bool csvOutput = false, bool verbose = false) {
-        if (csvOutput) {
-            DisplayCsvFormat(results);
-        } else {
-            DisplayTableFormat(results, verbose);
-        }
-    }
+    private bool _csvHeadersWritten;
 
     /// <summary>
     /// Displays a single query result immediately (for streaming).
@@ -65,9 +51,9 @@ public class ResultsFormatterService {
         var sb = new StringBuilder();
 
         // Write headers only once for first successful result
-        if (!csvHeadersWritten && result.Success && result.Rows.Count > 0) {
+        if (!_csvHeadersWritten && result.Success && result.Rows.Count > 0) {
             sb.AppendLine("client_id," + string.Join(",", result.ColumnNames));
-            csvHeadersWritten = true;
+            _csvHeadersWritten = true;
         }
 
         // Write data rows

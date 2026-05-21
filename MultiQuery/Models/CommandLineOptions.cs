@@ -5,9 +5,9 @@ namespace MultiQuery.Models;
 /// </summary>
 public class CommandLineOptions {
     /// <summary>
-    /// Path to the SQL query file to execute.
+    /// Either a path to a .sql file or an inline SQL query string.
     /// </summary>
-    public required string QueryFile { get; set; }
+    public required string Query { get; set; }
 
     /// <summary>
     /// Path to the JSON file containing database environment configurations.

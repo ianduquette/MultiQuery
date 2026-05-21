@@ -4,7 +4,7 @@ using MultiQuery.Services;
 
 namespace MultiQuery;
 
-class Program {
+internal class Program {
     static async Task<int> Main(string[] args) {
         Console.OutputEncoding = System.Text.Encoding.UTF8;
         var rootCommand = CreateRootCommand();
@@ -38,7 +38,7 @@ class Program {
 
         rootCommand.SetHandler(async (queryFile, environmentsFile, csvOutput, verbose) => {
             var options = new CommandLineOptions {
-                QueryFile = queryFile,
+                Query = queryFile,
                 EnvironmentsFile = environmentsFile,
                 CsvOutput = csvOutput,
                 Verbose = verbose
@@ -59,12 +59,12 @@ class Program {
             // doesn't exist, fail. Otherwise, treat the string itself as the query.
             string? resolvedQueryFile = null;
             try {
-                var attempted = pathResolver.ResolvePath(options.QueryFile);
+                var attempted = pathResolver.ResolvePath(options.Query);
                 if (File.Exists(attempted)) {
                     resolvedQueryFile = attempted;
-                } else if (options.QueryFile.EndsWith(".sql", StringComparison.OrdinalIgnoreCase)) {
-                    Console.Error.WriteLine($"Error: Query file '{options.QueryFile}' not found.");
-                    Console.Error.WriteLine($"Resolved path: {attempted}");
+                } else if (options.Query.EndsWith(".sql", StringComparison.OrdinalIgnoreCase)) {
+                    await Console.Error.WriteLineAsync($"Error: Query file '{options.Query}' not found.");
+                    await Console.Error.WriteLineAsync($"Resolved path: {attempted}");
                     Environment.Exit(1);
                     return;
                 }
@@ -72,28 +72,28 @@ class Program {
                 // Input contains characters that aren't valid in a path → treat as inline.
             }
 
-            bool isInlineQuery = resolvedQueryFile == null;
-            string queryDisplayName = isInlineQuery ? "inline query" : Path.GetFileName(resolvedQueryFile!);
+            var isInlineQuery = resolvedQueryFile == null;
+            var queryDisplayName = isInlineQuery ? "inline query" : Path.GetFileName(resolvedQueryFile!);
 
             string resolvedEnvironmentsFile;
             try {
                 resolvedEnvironmentsFile = pathResolver.ResolveEnvironmentsFile(options.EnvironmentsFile);
             } catch (FileNotFoundException ex) {
-                Console.Error.WriteLine($"Error: {ex.Message}");
+                await Console.Error.WriteLineAsync($"Error: {ex.Message}");
                 Environment.Exit(1);
                 return;
             }
 
             // Phase 1 Output: Display parsed arguments
             Console.WriteLine("=== MultiQuery - Parsed Arguments ===");
-            Console.WriteLine($"Query: {(isInlineQuery ? "(inline SQL)" : options.QueryFile)}");
+            Console.WriteLine($"Query: {(isInlineQuery ? "(inline SQL)" : options.Query)}");
             Console.WriteLine($"Environments File: {options.EnvironmentsFile}");
             Console.WriteLine($"CSV Output: {options.CsvOutput}");
             Console.WriteLine($"Verbose Mode: {options.Verbose}");
             Console.WriteLine();
 
             if (!isInlineQuery) {
-                pathResolver.DisplayPathResolution(options.QueryFile, resolvedQueryFile!, "Query File", options.Verbose);
+                pathResolver.DisplayPathResolution(options.Query, resolvedQueryFile!, "Query File", options.Verbose);
             }
             pathResolver.DisplayPathResolution(options.EnvironmentsFile, resolvedEnvironmentsFile, "Environments File", options.Verbose, isEnvironmentsFile: true);
 
@@ -112,9 +112,9 @@ class Program {
             // Phase 3: Load and validate query (before connecting — fail fast on bad queries)
             string queryContent;
             if (isInlineQuery) {
-                queryContent = options.QueryFile.Trim();
+                queryContent = options.Query.Trim();
                 if (string.IsNullOrWhiteSpace(queryContent)) {
-                    Console.Error.WriteLine("Error: Query is empty.");
+                    await Console.Error.WriteLineAsync("Error: Query is empty.");
                     Environment.Exit(1);
                     return;
                 }
@@ -132,7 +132,7 @@ class Program {
 
             if (!validationResult.IsValid) {
                 Console.ForegroundColor = ConsoleColor.Red;
-                Console.Error.WriteLine("Query validation failed. Only SELECT statements are allowed.");
+                await Console.Error.WriteLineAsync("Query validation failed. Only SELECT statements are allowed.");
                 Console.ResetColor();
                 Environment.Exit(1);
             }
@@ -171,17 +171,17 @@ class Program {
             await queryExecutionService.ExecuteQueryStreamingAsync(
                 queryContent,
                 successfulEnvironments,
-                queryDisplayName,
-                async result => {
+                queryDisplayName, result => {
                     resultsFormatter.DisplaySingleResult(result, options.CsvOutput, isFirstResult);
                     isFirstResult = false;
+                    return Task.CompletedTask;
                 });
 
             Console.WriteLine("Query execution complete!");
         } catch (Exception ex) {
-            Console.Error.WriteLine($"Error: {ex.Message}");
+            await Console.Error.WriteLineAsync($"Error: {ex.Message}");
             if (options.Verbose) {
-                Console.Error.WriteLine($"Stack trace: {ex.StackTrace}");
+                await Console.Error.WriteLineAsync($"Stack trace: {ex.StackTrace}");
             }
             Environment.Exit(1);
         }

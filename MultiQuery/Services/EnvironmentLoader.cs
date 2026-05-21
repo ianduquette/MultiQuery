@@ -37,11 +37,10 @@ public class EnvironmentLoader {
 
             // Validate the configuration
             var validationErrors = config.Validate();
-            if (validationErrors.Count > 0) {
-                var errorMessage = "Environment configuration validation failed:\n" +
-                                 string.Join("\n", validationErrors);
-                throw new InvalidOperationException(errorMessage);
-            }
+            if (validationErrors.Count <= 0) return config;
+            var errorMessage = "Environment configuration validation failed:\n" +
+                               string.Join("\n", validationErrors);
+            throw new InvalidOperationException(errorMessage);
 
             return config;
         } catch (JsonException ex) {
@@ -59,7 +58,7 @@ public class EnvironmentLoader {
     public void DisplayEnvironments(EnvironmentConfig config, bool verbose = false) {
         Console.WriteLine($"=== Loaded {config.Count} Database Environment(s) ===");
 
-        for (int i = 0; i < config.Environments.Count; i++) {
+        for (var i = 0; i < config.Environments.Count; i++) {
             var env = config.Environments[i];
             Console.WriteLine($"{i + 1:D2}. {env}");
 

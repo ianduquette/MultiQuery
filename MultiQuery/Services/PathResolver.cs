@@ -1,4 +1,3 @@
-using System.IO;
 using System.Reflection;
 
 namespace MultiQuery.Services;
@@ -31,29 +30,6 @@ public class PathResolver {
     }
 
     /// <summary>
-    /// Resolves a file path and validates that the file exists.
-    /// </summary>
-    /// <param name="filePath">The file path to resolve and validate.</param>
-    /// <param name="fileDescription">Description of the file type for error messages (e.g., "query file", "environments file").</param>
-    /// <returns>The resolved absolute file path.</returns>
-    /// <exception cref="FileNotFoundException">Thrown when the resolved file does not exist.</exception>
-    /// <exception cref="ArgumentException">Thrown when the file path is null or empty.</exception>
-    public string ResolveAndValidatePath(string filePath, string fileDescription = "file") {
-        var resolvedPath = ResolvePath(filePath);
-
-        if (!File.Exists(resolvedPath)) {
-            var currentDirectory = Directory.GetCurrentDirectory();
-            throw new FileNotFoundException(
-                $"The {fileDescription} '{filePath}' was not found.\n" +
-                $"Resolved path: {resolvedPath}\n" +
-                $"Current working directory: {currentDirectory}\n" +
-                $"Tip: Ensure the file exists in the current directory or provide an absolute path.");
-        }
-
-        return resolvedPath;
-    }
-
-    /// <summary>
     /// Resolves an environments file path with fallback to the application install directory.
     /// Search order: 1) Current working directory, 2) Application install directory
     /// </summary>
@@ -75,6 +51,7 @@ public class PathResolver {
                     $"Resolved path: {absolutePath}\n" +
                     $"Tip: Ensure the file exists at the specified absolute path.");
             }
+
             return absolutePath;
         }
 
@@ -105,18 +82,10 @@ public class PathResolver {
     }
 
     /// <summary>
-    /// Gets the current working directory.
-    /// </summary>
-    /// <returns>The current working directory path.</returns>
-    public string GetCurrentDirectory() {
-        return Directory.GetCurrentDirectory();
-    }
-
-    /// <summary>
     /// Gets the application install directory (where the executable is located).
     /// </summary>
     /// <returns>The application install directory path.</returns>
-    public string GetApplicationInstallDirectory() {
+    private string GetApplicationInstallDirectory() {
         var assembly = Assembly.GetExecutingAssembly();
         var assemblyLocation = assembly.Location;
 
@@ -136,30 +105,30 @@ public class PathResolver {
     /// <param name="fileDescription">Description of the file type.</param>
     /// <param name="verbose">Whether to show detailed information.</param>
     /// <param name="isEnvironmentsFile">Whether this is an environments file (shows fallback info).</param>
-    public void DisplayPathResolution(string originalPath, string resolvedPath, string fileDescription, bool verbose = false, bool isEnvironmentsFile = false) {
-        if (verbose) {
-            var currentDirectory = Directory.GetCurrentDirectory();
-            var isRelative = !Path.IsPathRooted(originalPath);
+    public void DisplayPathResolution(string originalPath, string resolvedPath, string fileDescription,
+        bool verbose = false, bool isEnvironmentsFile = false) {
+        if (!verbose) return;
+        var currentDirectory = Directory.GetCurrentDirectory();
+        var isRelative = !Path.IsPathRooted(originalPath);
 
-            Console.WriteLine($"=== Path Resolution: {fileDescription} ===");
-            Console.WriteLine($"Original path: {originalPath}");
-            Console.WriteLine($"Path type: {(isRelative ? "Relative" : "Absolute")}");
-            Console.WriteLine($"Current working directory: {currentDirectory}");
+        Console.WriteLine($"=== Path Resolution: {fileDescription} ===");
+        Console.WriteLine($"Original path: {originalPath}");
+        Console.WriteLine($"Path type: {(isRelative ? "Relative" : "Absolute")}");
+        Console.WriteLine($"Current working directory: {currentDirectory}");
 
-            if (isEnvironmentsFile && isRelative) {
-                var installDirectory = GetApplicationInstallDirectory();
-                var currentDirPath = Path.Combine(currentDirectory, originalPath);
-                var installDirPath = Path.Combine(installDirectory, originalPath);
+        if (isEnvironmentsFile && isRelative) {
+            var installDirectory = GetApplicationInstallDirectory();
+            var currentDirPath = Path.Combine(currentDirectory, originalPath);
+            var installDirPath = Path.Combine(installDirectory, originalPath);
 
-                Console.WriteLine($"Search locations:");
-                Console.WriteLine($"  1. Current directory: {currentDirPath} {(File.Exists(currentDirPath) ? "✓" : "✗")}");
-                Console.WriteLine($"  2. Install directory: {installDirPath} {(File.Exists(installDirPath) ? "✓" : "✗")}");
-                Console.WriteLine($"Application install directory: {installDirectory}");
-            }
-
-            Console.WriteLine($"Resolved path: {resolvedPath}");
-            Console.WriteLine($"File exists: {File.Exists(resolvedPath)}");
-            Console.WriteLine();
+            Console.WriteLine($"Search locations:");
+            Console.WriteLine($"  1. Current directory: {currentDirPath} {(File.Exists(currentDirPath) ? "✓" : "✗")}");
+            Console.WriteLine($"  2. Install directory: {installDirPath} {(File.Exists(installDirPath) ? "✓" : "✗")}");
+            Console.WriteLine($"Application install directory: {installDirectory}");
         }
+
+        Console.WriteLine($"Resolved path: {resolvedPath}");
+        Console.WriteLine($"File exists: {File.Exists(resolvedPath)}");
+        Console.WriteLine();
     }
 }

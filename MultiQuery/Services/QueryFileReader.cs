@@ -85,8 +85,8 @@ public class QueryFileReader {
     /// <param name="filePath">Path to the query file.</param>
     /// <param name="verbose">Whether to show the full query content.</param>
     public void DisplayQueryContent(string queryContent, string filePath, bool verbose = false) {
-        var lines = queryContent.Split('\n', StringSplitOptions.None);
-        var nonEmptyLines = lines.Where(line => !string.IsNullOrWhiteSpace(line)).Count();
+        var lines = queryContent.Split('\n');
+        var nonEmptyLines = lines.Count(line => !string.IsNullOrWhiteSpace(line));
 
         Console.WriteLine($"=== SQL Query File: {Path.GetFileName(filePath)} ===");
         Console.WriteLine($"File Size: {new FileInfo(filePath).Length} bytes");

@@ -29,7 +29,7 @@ public class EnvironmentConfig {
             return errors;
         }
 
-        for (int i = 0; i < Environments.Count; i++) {
+        for (var i = 0; i < Environments.Count; i++) {
             var env = Environments[i];
             var prefix = $"Environment {i + 1}";
 
